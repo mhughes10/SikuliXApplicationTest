@@ -5,21 +5,22 @@ import org.sikuli.script.ScreenImage;
 import org.sikuli.script.Match;
 import org.sikuli.script.Region;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.List;
-import java.util.Properties;
+import java.util.*;
+import java.util.logging.FileHandler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.bytedeco.javacv.Java2DFrameUtils;
 import org.bytedeco.opencv.global.opencv_imgproc;
 import org.bytedeco.opencv.opencv_core.*;
 import org.bytedeco.opencv.global.opencv_imgcodecs;
 
-
-public class Main
+public class ArchiveCheck
 	{
-		/*static Screen screen = new Screen();
+		
+		private static final Logger LOGGER = Logger.getLogger(ArchiveCheck.class.getName());
+		
+		static Screen screen = new Screen();
 		
 		static Match match;
 		
@@ -28,79 +29,36 @@ public class Main
 		static Region region2;
 		
 		static String[] path = {"C:\\System Administrator\\SikuliX_Resources\\Images\\"};
-		*/
-		public static void main(String[] args) throws FileNotFoundException, IOException
+		
+		
+		public static void test(String address, String port, String username, String password, List<String> cameraList)
 		{
-			ArchiveCheck check = new ArchiveCheck();
-			
-			Properties prop = new Properties();
-			
-			String username;
-			String password;
-			
-			try(FileInputStream input = new FileInputStream("C:\\System Administrator\\SikuliX_Resources\\Credentials\\credentials.properties"))
-			{
-				prop.load(input);
-				
-				username = prop.getProperty("bhills.username");
-				password = prop.getProperty("bhills.password");
-			}
-			
-			List<Deploy> deployments = DeploymentReader.loadDeployments("C:\\System Administrator\\SikuliX_Resources\\Credentials\\test.txt");
-			
-			for ( Deploy deploy : deployments)
-				{
-					ArchiveCheck.test(deploy.address, deploy.port, username, password, deploy.cameraList);
-				}
-			
-			/*String[] bhillCameraList = { 
-					"SideHouse-Stairwell-PTZ", "Side/Rear-Yard", 
-					"Front-Door-Camera", "Above-Front-Door-Camera", 
-					"Main-Entrance-Courtyard", "Side-Entrance-Courtyard",
-					"Right-Rear-Side-PTZ", "Side-Courtyard-PTZ",
-					"Rear-Yard-PTZ", "Rear-Yard-Patio", "Main-Carport-PTZ",
-					"Side-Door-Camera", "Garden-Camera", "Pool-House-Chimney-PTZ",
-					"Mud-Room-Camera", "Rear-Door", "Car-Port"};
-			
-			//System.out.println("OpenCV Core Version: " + Core.VERSION);
-			
-			Properties prop = new Properties();
-			
-			String username;
-			String password;
-			String address;
-						
-			try(FileInputStream input = new FileInputStream("C:\\System Administrator\\SikuliX_Resources\\Credentials\\credentials.properties"))
-			{
-				prop.load(input);
-				
-				username = prop.getProperty("bhills.username");
-				password = prop.getProperty("bhills.password");
-				address = prop.getProperty("bhills.address");
-			}
-			
 			
 			try
 				{
-
-					action("doubleClick", "PTVAS");
+					FileHandler handler = new FileHandler("C:\\System Administrator\\SikuliX_Resources\\Logs\\" + address.replace(".", "_")+ ".log", true);
+					LOGGER.addHandler(handler);
+					LOGGER.setLevel(Level.INFO);
+					
+					//action("doubleClick", "PTVAS");
 					action("click", "connectToOtherServer");
 					action("type", "serverAddress", address);
 					action("type", "serverPort", "7530");
 					action("type", "username", username);
 					action("type", "password", password);
 					action("click", "connect");
-					action("click", "archives");
+					//action("click", "archives");
 										
-					for (int i = 0; i < bhillCameraList.length; i++)
+					for (int i = 0; i < cameraList.size(); i++)
 						{
 							long breakCount = 0;
-							action("type", "search", bhillCameraList[i]);
+							action("type", "search", cameraList.get(i));
 							
-							if (screen.exists(path[0] + "archiveBubble") != null || 
-									screen.exists(path[0] + "archiveFixed") != null || 
-									screen.exists(path[0] + "archivePTZ") != null)
+							if (screen.exists(path[0] + "liveFeed") != null || 
+									screen.exists(path[0] + "cautionFeed") != null)
 							{
+								action("click", "archives");
+								action("type", "search", cameraList.get(i));
 								action("doubleClick", "archiveIcon");
 								action("click", "calender");
 								action("click", "calenderBackArrow");
@@ -125,25 +83,44 @@ public class Main
 										breakCount += archiveBreakCount(screen.capture(region2));
 																				
 									}
+								
+								System.out.println(cameraList.get(i) + " has " + breakCount + " breaks in archive" );
+								
+								if(breakCount > 0)
+									{
+										LOGGER.info(cameraList.get(i) + " has " + breakCount + " breaks in archive" );
+									}
+								
+								action("click", "calenderForwardArrow");
+								action("rightClick", "archiveIcon");
+								action("click", "stopPlaying");
+								action("click", "clearSearch");
+								action("click", "liveView");
+								action("click", "clearSearch");
 							}
 							
-							System.out.println(bhillCameraList[i] + " has " + breakCount + " breaks in archive" );
+							else
+								{
+									action("click", "clearSearch");
+								}
 							
-							action("rightClick", "archiveIcon");
-							action("click", "stopPlaying");
-							action("click", "clearSearch");
+							
 						}
+					
+					action("click", "admin");
+					action("click", "disconnect");
+					action("click", "cancel");
 
 				}
 			
 			catch (Exception e)
 			{
 				System.out.println(e);
-			}*/
+			}
 		}
 		
-		 // method to switch between actions
-		/*public static void action(String action, String reference)
+		// method to switch between actions
+		public static void action(String action, String reference)
 		{
 			String pathTo = path[0] + reference + ".png";
 			
@@ -209,7 +186,7 @@ public class Main
 			}
 		
 		// Returns the total amount of breaks in archive footage
-		public static long archiveBreakCount(ScreenImage timelineCapture)
+		private static long archiveBreakCount(ScreenImage timelineCapture)
 		{
 			
 			Mat image = Java2DFrameUtils.toMat(timelineCapture.getImage());
@@ -237,7 +214,5 @@ public class Main
 
 			//System.out.println("Number of breaks detected: " + contours.size());
 			return contours.size() -1;
-		}*/
-		
-		
+		}
 	}

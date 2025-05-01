@@ -7,5 +7,6 @@
 	</classpathentry>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="lib" path="C:/Users/Admin/eclipse-workspace/PTVSS_Test_Automation/SikuliX_Resources/sikulixapi-2.0.5-win.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Admin/git/SikuliXApplicationTest/SikuliXApplicationTest/PTVSS_SikuliX_Test/javacv-platform-1.5.11-bin/javacv-platform.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
