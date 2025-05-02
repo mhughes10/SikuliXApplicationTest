@@ -1,15 +1,13 @@
 package com.ptvss.sikulix.archive.test;
 
-import org.sikuli.script.Screen;
-import org.sikuli.script.ScreenImage;
-import org.sikuli.script.Match;
-import org.sikuli.script.Region;
+import org.sikuli.script.*;
 
 import java.util.*;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.bytedeco.javacv.CameraDevice.Settings;
 import org.bytedeco.javacv.Java2DFrameUtils;
 import org.bytedeco.opencv.global.opencv_imgproc;
 import org.bytedeco.opencv.opencv_core.*;
@@ -30,15 +28,21 @@ public class ArchiveCheck
 		
 		static String[] path = {"C:\\System Administrator\\SikuliX_Resources\\Images\\"};
 		
-		
 		public static void test(String address, String port, String username, String password, List<String> cameraList)
 		{
+			FileHandler handler;
 			
 			try
 				{
-					FileHandler handler = new FileHandler("C:\\System Administrator\\SikuliX_Resources\\Logs\\" + address.replace(".", "_")+ ".log", true);
+					handler = new FileHandler("C:\\System Administrator\\SikuliX_Resources\\Logs\\" + address.replace(".", "_")+ ".log", true);
 					LOGGER.addHandler(handler);
 					LOGGER.setLevel(Level.INFO);
+				}
+			
+			catch (Exception e)
+				{
+					System.out.println(e);
+				}
 					
 					//action("doubleClick", "PTVAS");
 					action("click", "connectToOtherServer");
@@ -48,6 +52,7 @@ public class ArchiveCheck
 					action("type", "password", password);
 					action("click", "connect");
 					//action("click", "archives");
+				
 										
 					for (int i = 0; i < cameraList.size(); i++)
 						{
@@ -67,10 +72,20 @@ public class ArchiveCheck
 								for (int j = 0; j < 24; j++)
 									{
 										String pathTo = path[0] + "Time" + "\\"+j+".PNG";
-										region1.click(pathTo);
 										
-										action("match", "archiveTimelineRef");
-										region2 = new Region(match);
+										try
+											{
+												region1.click(pathTo);
+												action("match", "archiveTimelineRef");
+												region2 = new Region(match);
+												breakCount += archiveBreakCount(screen.capture(region2));
+											}
+										
+										catch (Exception e)
+										{
+											System.out.println(e);
+											continue;
+										}
 																			
 										//pathTo = path[0] + "Captures";
 										//String filename = bhillCameraList[i] + "_" + j;
@@ -79,9 +94,6 @@ public class ArchiveCheck
 										
 										//screen.capture(region2).save(pathTo, filename.replace("/", "-"));
 										
-										
-										breakCount += archiveBreakCount(screen.capture(region2));
-																				
 									}
 								
 								System.out.println(cameraList.get(i) + " has " + breakCount + " breaks in archive" );
@@ -110,13 +122,6 @@ public class ArchiveCheck
 					action("click", "admin");
 					action("click", "disconnect");
 					action("click", "cancel");
-
-				}
-			
-			catch (Exception e)
-			{
-				System.out.println(e);
-			}
 		}
 		
 		// method to switch between actions
